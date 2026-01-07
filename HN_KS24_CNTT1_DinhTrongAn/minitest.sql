@@ -75,32 +75,40 @@ select r.room_type,
         from bookings
         where room_id = r.room_id) as count
 from rooms r;
-SELECT
-    g.guest_name,
-    GROUP_CONCAT(r.room_type SEPARATOR ', ') AS room_types,group_concat(b.check_in separator ',') as date
+SELECT g.guest_name,
+       GROUP_CONCAT(r.room_type SEPARATOR ', ') AS room_types,
+       group_concat(b.check_in separator ',')   as date
 FROM bookings b
-INNER JOIN guests g ON b.guest_id = g.guest_id
-INNER JOIN rooms r ON b.room_id = r.room_id
+         INNER JOIN guests g ON b.guest_id = g.guest_id
+         INNER JOIN rooms r ON b.room_id = r.room_id
 GROUP BY g.guest_id, g.guest_name;
-SELECT
-    r.room_type,
-    SUM(r.price_per_day * DATEDIFF(b.check_out, b.check_in)) AS total_price
+SELECT r.room_type,
+       SUM(r.price_per_day * DATEDIFF(b.check_out, b.check_in)) AS total_price
 FROM bookings b
-JOIN rooms r ON b.room_id = r.room_id
+         JOIN rooms r ON b.room_id = r.room_id
 GROUP BY r.room_type;
-SELECT
-    g.guest_id,
-    g.guest_name,
-    COUNT(b.booking_id) AS total_bookings
+SELECT g.guest_id,
+       g.guest_name,
+       COUNT(b.booking_id) AS total_bookings
 FROM guests g
-JOIN bookings b ON g.guest_id = b.guest_id
+         JOIN bookings b ON g.guest_id = b.guest_id
 GROUP BY g.guest_id, g.guest_name
 HAVING COUNT(b.booking_id) >= 2;
-SELECT
-    r.room_type,
-    COUNT(b.booking_id) AS total_bookings
+SELECT r.room_type,
+       COUNT(b.booking_id) AS total_bookings
 FROM bookings b
-JOIN rooms r ON b.room_id = r.room_id
+         JOIN rooms r ON b.room_id = r.room_id
 GROUP BY r.room_type
 ORDER BY total_bookings DESC
 LIMIT 1;
+select r.room_type
+from rooms r
+where r.price_per_day > (select AVG(r.price_per_day) from rooms);
+select g.guest_name
+from guests g
+where not exists(select 1
+                 from bookings b
+                 where (b.guest_id = g.guest_id));
+select r.room_type,(select count(*) from bookings b where r.room_id=b.room_id ) as count from rooms r
+order by count desc
+limit 1;
